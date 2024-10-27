@@ -37,6 +37,11 @@ class DetectorView:
         self.camera_feed.src_base64 = img_base64
         self.page.update()
 
+    def display_console_output(self, message):
+        # Añadir el mensaje al cuadro de texto de consola y actualizar la interfaz
+        self.console_output.value += message + "\n"
+        self.page.update()
+
     def build(self):
         # Construir la vista del detector
         return ft.View(
@@ -67,7 +72,7 @@ class DetectorView:
                 # Row for COM port selection and Arduino console output
                 ft.Row(
                     [
-                        # Column for COM port Dropdown, Connect button, and Status
+                        # Column for COM port Dropdown, Connect button, Status, and Reload button
                         ft.Column(
                             [
                                 ft.Text("Seleccionar Puerto COM", color=ColorsUI.secundary_dark),
@@ -79,6 +84,11 @@ class DetectorView:
                                     on_click=lambda e: self.controller.conectar_arduino()
                                 ),
                                 self.status_label,
+                                ft.ElevatedButton(
+                                    text="Recargar Puertos",
+                                    icon=ft.icons.REFRESH,
+                                    on_click=lambda e: self.update_ports()
+                                )
                             ],
                             alignment=ft.MainAxisAlignment.START,
                         ),
@@ -90,6 +100,25 @@ class DetectorView:
                             ],
                             alignment=ft.MainAxisAlignment.START,
                         ),
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                ),
+                
+                # Row for Start and Stop buttons
+                ft.Row(
+                    [
+                        ft.ElevatedButton(
+                            text="Iniciar",
+                            bgcolor=ColorsUI.primary,
+                            color="white",
+                            on_click=lambda e: self.controller.start_led()
+                        ),
+                        ft.ElevatedButton(
+                            text="Detener",
+                            bgcolor=ColorsUI.primary,
+                            color="white",
+                            on_click=lambda e: self.controller.stop_led()
+                        )
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,
                 ),

@@ -18,7 +18,7 @@ class MainController:
         self.detector_view = DetectorView(page, self)
         self.update_camera_list()
         self.cap = None  # Variable para almacenar el objeto de captura de la cámara
-
+#----------------MOSTRAR PANTALLAS DE BIENVENIDA Y DETECTOR
     def show_bienvenida(self):
         self.page.window_width = 750
         self.page.window_height = 700 
@@ -32,13 +32,29 @@ class MainController:
         self.page.views.clear()
         self.page.views.append(self.detector_view.build())
         self.page.update()
-
+#----------------CONEXION CON ARDUINO
     def conectar_arduino(self):
-        if self.arduino.connect():
+        # Conectar al Arduino usando el puerto seleccionado
+        selected_port = self.detector_view.dropdown_ports.value
+        if selected_port and self.arduino.connect(selected_port):
             self.detector_view.set_status("Conectado")
+            self.detector_view.display_console_output("Arduino conectado")
         else:
             self.detector_view.set_status("Error al conectar")
+            self.detector_view.display_console_output("Error al conectar al Arduino")
 
+    def start_led(self):
+        # Enciende el LED en el Arduino y muestra la respuesta
+        response = self.arduino.start_led()
+        if response:
+            self.detector_view.display_console_output(response)
+
+    def stop_led(self):
+        # Apaga el LED en el Arduino y muestra la respuesta
+        response = self.arduino.stop_led()
+        if response:
+            self.detector_view.display_console_output(response)
+#----------------CONEXION CAMARA
     def update_camera_list(self):
         cameras = self.camera.get_cameras()
         self.detector_view.dropdown_cameras.options = [
