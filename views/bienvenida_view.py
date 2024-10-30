@@ -21,7 +21,7 @@ class BienvenidaView:
                                     AppConstants.APP_TITLE, 
                                     size=30, 
                                     weight="bold", 
-                                    color=ColorsUI.primary,
+                                    color=ColorsUI.secundary_dark,
                                 ),
                                 ft.Text(
                                     "Universidad Técnica de Ambato", 
@@ -98,7 +98,7 @@ class BienvenidaView:
                             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                             spacing=15  # Ajuste del espacio general entre los elementos
                         ),
-                        bgcolor=ColorsUI.background, 
+                        bgcolor=ColorsUI.secundary, 
                         alignment=ft.alignment.center,
                         width=700,  # Limita el ancho máximo a 700 píxeles
                         border_radius=15,
