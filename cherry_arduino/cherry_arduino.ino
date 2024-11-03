@@ -23,6 +23,12 @@ void loop() {
     receivedData.trim();  // Remove any extra whitespace or newlines
   }
 
+  // Check for connection command
+  if (receivedData == "CONNECT") {
+    Serial.println("Conectado");  // Send a response to indicate successful connection
+    receivedData = "";  // Clear receivedData to avoid processing it in the state machine
+  }
+
   // Main state machine
   switch (currentState) {
     case WAIT_FOR_START:

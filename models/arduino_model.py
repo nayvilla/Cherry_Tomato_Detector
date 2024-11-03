@@ -1,4 +1,5 @@
 # models/arduino_model.py
+import time
 import serial
 import serial.tools.list_ports
 
@@ -11,13 +12,22 @@ class ArduinoModel:
         return [port.device for port in serial.tools.list_ports.comports()]
 
     def connect(self, port):
-        # Cierra cualquier conexión anterior
         self.close()
         try:
-            self.serial_connection = serial.Serial(port, 9600, timeout=1)
+            self.serial_connection = serial.Serial(port, 9600, timeout=2)
+            time.sleep(2)
+            self.serial_connection.reset_input_buffer()
             self.serial_connection.write(b'CONNECT\n')
-            response = self.serial_connection.readline().decode().strip()
-            return response == "Conectado"
+            time.sleep(2)
+            response = ""
+            start_time = time.time()
+            while (time.time() - start_time) < 3:  
+                if self.serial_connection.in_waiting > 0:
+                    response += self.serial_connection.readline().decode().strip()
+                    if "Conectado" in response:
+                        break
+            print(f"Esta es la response: {response}")
+            return "Conectado" in response
         except Exception as e:
             print(f"Error de conexión: {e}")
             return False
