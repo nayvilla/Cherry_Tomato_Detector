@@ -1,13 +1,15 @@
 import glob
 import os
 import flet as ft
-from utils.colors import ColorsUI
-from utils.constants import AppConstants
+from util.colors import ColorsUI
+from util.constants import AppConstants
+from model.arduino_model import ArduinoModel
 
 class DetectorView:
     def __init__(self, page, controller):
         self.page = page
         self.controller = controller
+        self.arduino = ArduinoModel()
         self.status_label = ft.Text("Desconectado", color=ColorsUI.secundary_dark)
         self.dropdown_ports = ft.Dropdown()
         self.dropdown_cameras = ft.Dropdown()
@@ -42,16 +44,19 @@ class DetectorView:
             self.loading_modal.open = True
         else:
             self.loading_modal.open = False
-        self.update_images()
+        #self.update_images()
         self.page.update()
 
     def update_ports(self):
-        ports = self.controller.arduino.get_ports()
+        ports = self.arduino.get_ports()
+        #print(f"Hay estos puertos: {ports}")
         self.dropdown_ports.options = [ft.dropdown.Option(port) for port in ports]
+        self.page.update()
 
     def update_cameras(self):
         cameras = self.controller.camera.get_cameras()
         self.dropdown_cameras.options = [ft.dropdown.Option(camera) for camera in cameras]
+        self.page.update()
 
     def set_status(self, status):
         self.status_label.value = status
@@ -75,28 +80,30 @@ class DetectorView:
             except Exception as e:
                 print(f"Error al eliminar {file_path}: {e}")
 
-    def create_image_columns(self):
-        # Crea contenedores de imagen desde los archivos en capture_path
-        images = []
-        for i in range(1, 5):  # Ajusta según la cantidad de imágenes que quieras mostrar
-            img_path = os.path.join(self.capture_path, f"captureImage{i}.png")
-            if os.path.exists(img_path):
-                images.append(
-                    ft.Container(
-                        content=ft.Image(src=img_path, width=200, height=200),
-                        border=ft.border.all(1, ColorsUI.secundary_dark),
-                        padding=5,
-                        bgcolor=ColorsUI.background,
-                        border_radius=15
-                    )
-                )
-        return images
+    def create_image_column(self, image_path):
+        if os.path.exists(image_path):
+            print(f"Path detectado imagen: {image_path}")
+            return ft.Container(
+                content=ft.Image(src=image_path, width=200, height=200),
+                border=ft.border.all(1, ColorsUI.secundary_dark),
+                padding=5,
+                bgcolor=ColorsUI.background,
+                border_radius=15
+            )
+        else:
+            print(f"La imagen no existe: {image_path}")
+            return None
 
-    def update_images(self):
-        # Recarga las imágenes en el contenedor de imágenes
-        self.image_container.clean
-        self.image_container.controls = self.create_image_columns()
+    def update_images(self, image_path):    
+        if len(self.image_container.controls) >= 4:
+            self.image_container.controls.clear()
+        
+        new_image = self.create_image_column(image_path)
+        if new_image:
+            self.image_container.controls.append(new_image)
+        self.image_container.update()
         self.page.update()
+
 
     def build(self):
 
@@ -186,7 +193,7 @@ class DetectorView:
                                                         text="Iniciar",
                                                         bgcolor=ColorsUI.primary,
                                                         color="white",
-                                                        on_click=lambda e: (self.controller.handle_iniciar_proceso(), self.update_images())
+                                                        on_click=lambda e: self.controller.handle_iniciar_proceso()
                                                     ),
                                                     ft.ElevatedButton(
                                                         text="Detener",

@@ -1,8 +1,8 @@
 
 import flet as ft
 from controllers.controller import MainController
-from utils.colors import ColorsUI
-from utils.constants import AppConstants
+from util.colors import ColorsUI
+from util.constants import AppConstants
 
 def main(page: ft.Page):
     page.title = AppConstants.APP_TITLE

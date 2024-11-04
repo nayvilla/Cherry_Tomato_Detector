@@ -9,8 +9,8 @@ import threading
 
 from views.bienvenida_view import BienvenidaView
 from views.detector_view import DetectorView
-from models.arduino_model import ArduinoModel
-from models.camera_model import CameraModel
+from model.arduino_model import ArduinoModel
+from model.camera_model import CameraModel
 
 
 class MainController:
@@ -124,32 +124,38 @@ class MainController:
             self.iniciar_proceso()
         finally:
             self.detector_view.show_loading(False)
+            
+    def get_next_image_index(self):
+        """Obtiene el índice más alto de las imágenes existentes y devuelve el siguiente índice disponible."""
+        existing_images = glob.glob(os.path.join(self.detector_view.capture_path, "captureImage*.png"))
+        if not existing_images:
+            return 1  # No hay imágenes, empezar desde 1
+
+        # Extraer el número de cada imagen y obtener el máximo
+        max_index = max(
+            int(os.path.splitext(os.path.basename(img))[0].replace("captureImage", ""))
+            for img in existing_images
+        )
+        return max_index + 1  # Siguiente índice disponible
     
     def iniciar_proceso(self):
         # Inicia el proceso enviando "iniciar" al Arduino
         self.arduino.serial_connection.write(b'iniciar\n')
         self.detector_view.display_console_output("Enviado: iniciar")
+        img_index = self.get_next_image_index()
         
         # Ruta de captura de imágenes
         current_path = os.path.abspath(__file__)
         root_path = os.path.dirname(os.path.dirname(current_path))
         capture_path = os.path.join(root_path, "src", "capture_images")
         
-        # Busca y elimina todos los archivos .png en el directorio especificado
-        for file_path in glob.glob(os.path.join(capture_path, "*.png")):
-            try:
-                os.remove(file_path)
-                print(f"Archivo eliminado: {file_path}")
-            except Exception as e:
-                print(f"Error al eliminar {file_path}: {e}")
-        
         # Definir un índice de imagen para el nombre de archivo
-        img_index = 1
+        #img_index = 1
 
         # Espera la respuesta "escanear" para tomar la primera foto
         if self.esperar_respuesta("escanear"):
             self.tomar_foto_y_guardar(capture_path, f"captureImage{img_index}.png")
-            self.detector_view.update_images()
+            self.detector_view.update_images(os.path.join(capture_path, f"captureImage{img_index}.png"))
             self.arduino.serial_connection.write(b'foto1\n')
             self.detector_view.display_console_output("Enviado: foto1")
             img_index += 1
@@ -157,7 +163,7 @@ class MainController:
         # Espera la respuesta "giro90" para tomar la segunda foto
         if self.esperar_respuesta("giro90"):
             self.tomar_foto_y_guardar(capture_path, f"captureImage{img_index}.png")
-            self.detector_view.update_images()
+            self.detector_view.update_images(os.path.join(capture_path, f"captureImage{img_index}.png"))
             self.arduino.serial_connection.write(b'foto2\n')
             self.detector_view.display_console_output("Enviado: foto2")
             img_index += 1
@@ -165,7 +171,7 @@ class MainController:
         # Espera la respuesta "giro180" para tomar la tercera foto
         if self.esperar_respuesta("giro180"):
             self.tomar_foto_y_guardar(capture_path, f"captureImage{img_index}.png")
-            self.detector_view.update_images()
+            self.detector_view.update_images(os.path.join(capture_path, f"captureImage{img_index}.png"))
             self.arduino.serial_connection.write(b'foto3\n')
             self.detector_view.display_console_output("Enviado: foto3")
             img_index += 1
@@ -173,7 +179,7 @@ class MainController:
         # Espera la respuesta "giro270" para tomar la cuarta foto
         if self.esperar_respuesta("giro270"):
             self.tomar_foto_y_guardar(capture_path, f"captureImage{img_index}.png")
-            self.detector_view.update_images()
+            self.detector_view.update_images(os.path.join(capture_path, f"captureImage{img_index}.png"))
             self.arduino.serial_connection.write(b'foto4\n')
             self.detector_view.display_console_output("Enviado: foto4")
 

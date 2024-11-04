@@ -1,6 +1,6 @@
 import flet as ft
-from utils.constants import AppConstants
-from utils.colors import ColorsUI
+from util.constants import AppConstants
+from util.colors import ColorsUI
 
 class BienvenidaView:
     def __init__(self, page, controller):

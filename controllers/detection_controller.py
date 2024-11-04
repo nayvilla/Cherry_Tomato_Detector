@@ -53,12 +53,20 @@ def process_and_save_image(image_path):
 
     # Ajustar las probabilidades de las detecciones y recolectarlas
     adjusted_detections = results.xyxy[0].clone()
-    adjusted_probabilities = []
+    detection_info = []  # Lista para almacenar información de cada detección
+    
     for detection in adjusted_detections:
         original_prob = detection[4].item()
         adjusted_prob = adjust_probability(original_prob)
         detection[4] = adjusted_prob
-        adjusted_probabilities.append(adjusted_prob)
+        
+        # Obtener clase predicha y ajustar formato de confianza
+        predicted_class = int(detection[5].item())  # Suponiendo que el índice 5 es la clase predicha
+        confidence = f"{adjusted_prob * 100:.2f}%"  # Convertir a porcentaje
+        
+        # Crear el formato "estado: <clase>, confianza: <confianza>"
+        detection_info.append(f"Estado: {predicted_class}, Confianza: {confidence}")
+        
         print(f"Probabilidad original: {original_prob} \nProbabilidad ajustada: {adjusted_prob}")
 
     # Renderizar la imagen con las detecciones ajustadas
@@ -67,5 +75,5 @@ def process_and_save_image(image_path):
     cv2.imwrite(str(output_path), np.squeeze(results.render()))
     print(f"Procesado y guardado: {output_path} con probabilidades ajustadas.")
 
-    # Devolver las probabilidades ajustadas
-    return adjusted_probabilities
+    # Devolver la información de detección en el formato requerido
+    return detection_info
