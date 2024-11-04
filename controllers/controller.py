@@ -1,16 +1,21 @@
 # controller.py
 import glob
 import os
+import pathlib
 import time
+from typing import Counter
 import flet as ft
 import cv2
 import base64
 import threading
 
+import torch
+
 from views.bienvenida_view import BienvenidaView
 from views.detector_view import DetectorView
 from model.arduino_model import ArduinoModel
 from model.camera_model import CameraModel
+from controllers.detection_controller import process_and_save_image, project_root
 
 
 class MainController:
@@ -22,7 +27,11 @@ class MainController:
         self.detector_view = DetectorView(page, self)
         self.update_camera_list()
         self.cap = None  
-        self.camera_feed_active = False  
+        self.camera_feed_active = False
+        # Configuración para compatibilidad con Windows
+        pathlib.PosixPath = pathlib.WindowsPath
+        self.model_path = project_root / "src/model_ia/best.pt"
+        self.model = torch.hub.load('ultralytics/yolov5', 'custom', path=str(self.model_path), force_reload=True)  
 
     def show_bienvenida(self):
         self.page.window_width = 750
@@ -148,14 +157,19 @@ class MainController:
         current_path = os.path.abspath(__file__)
         root_path = os.path.dirname(os.path.dirname(current_path))
         capture_path = os.path.join(root_path, "src", "capture_images")
+        result_path = os.path.join(root_path, "src", "result_images")
         
         # Definir un índice de imagen para el nombre de archivo
         #img_index = 1
+        # Lista para almacenar las predicciones
+        predictions_list = []
 
         # Espera la respuesta "escanear" para tomar la primera foto
         if self.esperar_respuesta("escanear"):
             self.tomar_foto_y_guardar(capture_path, f"captureImage{img_index}.png")
-            self.detector_view.update_images(os.path.join(capture_path, f"captureImage{img_index}.png"))
+            self.prediction = process_and_save_image(os.path.join(capture_path, f"captureImage{img_index}.png"), self.model)
+            predictions_list.extend(self.prediction)
+            self.detector_view.update_images(os.path.join(result_path, f"captureImage{img_index}_detection.png"), self.prediction)
             self.arduino.serial_connection.write(b'foto1\n')
             self.detector_view.display_console_output("Enviado: foto1")
             img_index += 1
@@ -163,7 +177,9 @@ class MainController:
         # Espera la respuesta "giro90" para tomar la segunda foto
         if self.esperar_respuesta("giro90"):
             self.tomar_foto_y_guardar(capture_path, f"captureImage{img_index}.png")
-            self.detector_view.update_images(os.path.join(capture_path, f"captureImage{img_index}.png"))
+            self.prediction = process_and_save_image(os.path.join(capture_path, f"captureImage{img_index}.png"), self.model)
+            predictions_list.extend(self.prediction)
+            self.detector_view.update_images(os.path.join(result_path, f"captureImage{img_index}_detection.png"), self.prediction)
             self.arduino.serial_connection.write(b'foto2\n')
             self.detector_view.display_console_output("Enviado: foto2")
             img_index += 1
@@ -171,7 +187,9 @@ class MainController:
         # Espera la respuesta "giro180" para tomar la tercera foto
         if self.esperar_respuesta("giro180"):
             self.tomar_foto_y_guardar(capture_path, f"captureImage{img_index}.png")
-            self.detector_view.update_images(os.path.join(capture_path, f"captureImage{img_index}.png"))
+            self.prediction = process_and_save_image(os.path.join(capture_path, f"captureImage{img_index}.png"), self.model)
+            predictions_list.extend(self.prediction)
+            self.detector_view.update_images(os.path.join(result_path, f"captureImage{img_index}_detection.png"), self.prediction)
             self.arduino.serial_connection.write(b'foto3\n')
             self.detector_view.display_console_output("Enviado: foto3")
             img_index += 1
@@ -179,13 +197,26 @@ class MainController:
         # Espera la respuesta "giro270" para tomar la cuarta foto
         if self.esperar_respuesta("giro270"):
             self.tomar_foto_y_guardar(capture_path, f"captureImage{img_index}.png")
-            self.detector_view.update_images(os.path.join(capture_path, f"captureImage{img_index}.png"))
+            self.prediction = process_and_save_image(os.path.join(capture_path, f"captureImage{img_index}.png"), self.model)
+            predictions_list.extend(self.prediction)
+            self.detector_view.update_images(os.path.join(result_path, f"captureImage{img_index}_detection.png"), self.prediction)
             self.arduino.serial_connection.write(b'foto4\n')
             self.detector_view.display_console_output("Enviado: foto4")
 
         # Espera la respuesta "resultado" para enviar el mensaje final
         if self.esperar_respuesta("resultado"):
-            resultado_msg = "resultado: MADURO con 0.894%"
+            # Contar ocurrencias de cada predicción en la lista
+            count = Counter(predictions_list)
+            # Obtener la predicción más frecuente
+            most_common_prediction, common_count = count.most_common(1)[0]
+
+
+            # Si hay un empate o pocos resultados, selecciona el de mayor confianza
+            if common_count == 1 or common_count < len(predictions_list) / 2:
+                # Ordenar por porcentaje de confianza y seleccionar el mayor
+                most_common_prediction = max(predictions_list, key=lambda x: float(x.split("Confianza: ")[1].strip('%')))
+
+            resultado_msg = f"resultado: {most_common_prediction}"
             self.arduino.serial_connection.write(resultado_msg.encode())
             self.detector_view.display_console_output(f"Enviado: {resultado_msg}")
 

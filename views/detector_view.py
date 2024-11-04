@@ -34,6 +34,7 @@ class DetectorView:
         self.current_path = os.path.abspath(__file__)
         self.root_path = os.path.dirname(os.path.dirname(self.current_path))
         self.capture_path = os.path.join(self.root_path, "src", "capture_images")
+        self.result_path = os.path.join(self.root_path, "src", "result_images")
         self.clear_images()
         self.image_container = ft.Row(spacing=10, alignment=ft.MainAxisAlignment.CENTER)
     
@@ -80,11 +81,26 @@ class DetectorView:
             except Exception as e:
                 print(f"Error al eliminar {file_path}: {e}")
 
-    def create_image_column(self, image_path):
+        for file_path in glob.glob(os.path.join(self.result_path, "*.png")):
+            try:
+                os.remove(file_path)
+                print(f"Archivo eliminado: {file_path}")
+            except Exception as e:
+                print(f"Error al eliminar {file_path}: {e}")
+
+    def create_image_column(self, image_path, prediction):
         if os.path.exists(image_path):
             print(f"Path detectado imagen: {image_path}")
             return ft.Container(
-                content=ft.Image(src=image_path, width=200, height=200),
+                
+                content= ft.Column(
+                    [
+                        ft.Image(src=image_path, width=200, height=200),
+                        ft.Text(prediction, color=ColorsUI.secundary_dark, weight="bold"),
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    spacing=5
+                ),
                 border=ft.border.all(1, ColorsUI.secundary_dark),
                 padding=5,
                 bgcolor=ColorsUI.background,
@@ -94,11 +110,11 @@ class DetectorView:
             print(f"La imagen no existe: {image_path}")
             return None
 
-    def update_images(self, image_path):    
+    def update_images(self, image_path, prediction):    
         if len(self.image_container.controls) >= 4:
             self.image_container.controls.clear()
         
-        new_image = self.create_image_column(image_path)
+        new_image = self.create_image_column(image_path, prediction)
         if new_image:
             self.image_container.controls.append(new_image)
         self.image_container.update()

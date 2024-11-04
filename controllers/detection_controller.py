@@ -8,12 +8,14 @@ import os
 # Configuración para compatibilidad con Windows
 pathlib.PosixPath = pathlib.WindowsPath
 
-# Determina automáticamente la ruta raíz del proyecto
 project_root = Path(__file__).resolve().parent.parent 
-model_path = project_root / "src/model_ia/best.pt"
 
-# Cargar el modelo YOLO
-model = torch.hub.load('ultralytics/yolov5', 'custom', path=str(model_path), force_reload=True)
+class_names = {
+    0: "Maduro",
+    1: "Premaduro",
+    2: "Inmaduro",
+    3: "Dañado"
+}
 
 # Función para ajustar la probabilidad
 def adjust_probability(prob):
@@ -35,7 +37,7 @@ def adjust_probability(prob):
         return prob
 
 # Función para procesar la imagen y devolver probabilidades ajustadas
-def process_and_save_image(image_path):
+def process_and_save_image(image_path, model):
     image_path = Path(image_path)
     
     # Definir la carpeta de salida en función de la ruta raíz del proyecto
@@ -62,18 +64,19 @@ def process_and_save_image(image_path):
         
         # Obtener clase predicha y ajustar formato de confianza
         predicted_class = int(detection[5].item())  # Suponiendo que el índice 5 es la clase predicha
+        class_name = class_names.get(predicted_class, "desconocido")
         confidence = f"{adjusted_prob * 100:.2f}%"  # Convertir a porcentaje
         
         # Crear el formato "estado: <clase>, confianza: <confianza>"
-        detection_info.append(f"Estado: {predicted_class}, Confianza: {confidence}")
+        detection_info.append(f"Estado: {class_name} con {confidence}")
         
-        print(f"Probabilidad original: {original_prob} \nProbabilidad ajustada: {adjusted_prob}")
+        print(f"Probabilidad original: {class_name} \nProbabilidad ajustada: {adjusted_prob}")
 
     # Renderizar la imagen con las detecciones ajustadas
     results.xyxy[0] = adjusted_detections
     output_path = output_folder / f"{image_path.stem}_detection.png"
     cv2.imwrite(str(output_path), np.squeeze(results.render()))
-    print(f"Procesado y guardado: {output_path} con probabilidades ajustadas.")
+    print(f"Procesado y guardado: {detection_info} con probabilidades ajustadas.")
 
     # Devolver la información de detección en el formato requerido
     return detection_info
