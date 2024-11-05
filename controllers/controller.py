@@ -205,18 +205,28 @@ class MainController:
 
         # Espera la respuesta "resultado" para enviar el mensaje final
         if self.esperar_respuesta("resultado"):
-            # Contar ocurrencias de cada predicción en la lista
-            count = Counter(predictions_list)
-            # Obtener la predicción más frecuente
-            most_common_prediction, common_count = count.most_common(1)[0]
+            # Verificar que predictions_list no esté vacía
+            if predictions_list:
+                # Contar ocurrencias de cada predicción en la lista
+                count = Counter(predictions_list)
 
+                # Asegurarse de que hay al menos un elemento en el contador
+                if count:
+                    # Obtener la predicción más frecuente
+                    most_common_prediction, common_count = count.most_common(1)[0]
 
-            # Si hay un empate o pocos resultados, selecciona el de mayor confianza
-            if common_count == 1 or common_count < len(predictions_list) / 2:
-                # Ordenar por porcentaje de confianza y seleccionar el mayor
-                most_common_prediction = max(predictions_list, key=lambda x: float(x.split("Confianza: ")[1].strip('%')))
+                    # Si hay un empate o pocos resultados, selecciona el de mayor confianza
+                    if common_count == 1 or common_count < len(predictions_list) / 2:
+                        # Ordenar por porcentaje de confianza y seleccionar el mayor
+                        most_common_prediction = max(predictions_list, key=lambda x: float(x.split("Confianza: ")[1].strip('%')))
+                else:
+                    most_common_prediction = "Sin resultados"  # O algún valor por defecto
+            else:
+                most_common_prediction = "Sin resultados"  # O algún valor por defecto
 
             resultado_msg = f"resultado: {most_common_prediction}"
+            self.detector_view.update_result(most_common_prediction)
+
             self.arduino.serial_connection.write(resultado_msg.encode())
             self.detector_view.display_console_output(f"Enviado: {resultado_msg}")
 

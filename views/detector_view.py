@@ -120,6 +120,12 @@ class DetectorView:
         self.image_container.update()
         self.page.update()
 
+    def update_result(self, prediction_result):    
+        # Actualizamos el texto del result_label
+        self.result_label.value = prediction_result
+        # Es necesario llamar a `update()` para que los cambios se reflejen en la interfaz
+        self.update()
+
 
     def build(self):
 
