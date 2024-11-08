@@ -15,7 +15,7 @@ from views.bienvenida_view import BienvenidaView
 from views.detector_view import DetectorView
 from model.arduino_model import ArduinoModel
 from model.camera_model import CameraModel
-from controllers.detection_controller import process_and_save_image, project_root
+from controllers.detection_controller import detect_tomato, project_root
 
 
 class MainController:
@@ -28,10 +28,7 @@ class MainController:
         self.update_camera_list()
         self.cap = None  
         self.camera_feed_active = False
-        # Configuración para compatibilidad con Windows
-        pathlib.PosixPath = pathlib.WindowsPath
-        self.model_path = project_root / "src/model_ia/best.pt"
-        self.model = torch.hub.load('ultralytics/yolov5', 'custom', path=str(self.model_path), force_reload=True)  
+        self.model = project_root / "src/model_ia/best.pt"
 
     def show_bienvenida(self):
         self.page.window_width = 750
@@ -167,7 +164,7 @@ class MainController:
         # Espera la respuesta "escanear" para tomar la primera foto
         if self.esperar_respuesta("escanear"):
             self.tomar_foto_y_guardar(capture_path, f"captureImage{img_index}.png")
-            self.prediction = process_and_save_image(os.path.join(capture_path, f"captureImage{img_index}.png"), self.model)
+            self.prediction = detect_tomato(os.path.join(capture_path, f"captureImage{img_index}.png"), self.model)
             predictions_list.extend(self.prediction)
             self.detector_view.update_images(os.path.join(result_path, f"captureImage{img_index}_detection.png"), self.prediction)
             self.arduino.serial_connection.write(b'foto1\n')
@@ -177,7 +174,7 @@ class MainController:
         # Espera la respuesta "giro90" para tomar la segunda foto
         if self.esperar_respuesta("giro90"):
             self.tomar_foto_y_guardar(capture_path, f"captureImage{img_index}.png")
-            self.prediction = process_and_save_image(os.path.join(capture_path, f"captureImage{img_index}.png"), self.model)
+            self.prediction = detect_tomato(os.path.join(capture_path, f"captureImage{img_index}.png"), self.model)
             predictions_list.extend(self.prediction)
             self.detector_view.update_images(os.path.join(result_path, f"captureImage{img_index}_detection.png"), self.prediction)
             self.arduino.serial_connection.write(b'foto2\n')
@@ -187,7 +184,7 @@ class MainController:
         # Espera la respuesta "giro180" para tomar la tercera foto
         if self.esperar_respuesta("giro180"):
             self.tomar_foto_y_guardar(capture_path, f"captureImage{img_index}.png")
-            self.prediction = process_and_save_image(os.path.join(capture_path, f"captureImage{img_index}.png"), self.model)
+            self.prediction = detect_tomato(os.path.join(capture_path, f"captureImage{img_index}.png"), self.model)
             predictions_list.extend(self.prediction)
             self.detector_view.update_images(os.path.join(result_path, f"captureImage{img_index}_detection.png"), self.prediction)
             self.arduino.serial_connection.write(b'foto3\n')
@@ -197,7 +194,7 @@ class MainController:
         # Espera la respuesta "giro270" para tomar la cuarta foto
         if self.esperar_respuesta("giro270"):
             self.tomar_foto_y_guardar(capture_path, f"captureImage{img_index}.png")
-            self.prediction = process_and_save_image(os.path.join(capture_path, f"captureImage{img_index}.png"), self.model)
+            self.prediction = detect_tomato(os.path.join(capture_path, f"captureImage{img_index}.png"), self.model)
             predictions_list.extend(self.prediction)
             self.detector_view.update_images(os.path.join(result_path, f"captureImage{img_index}_detection.png"), self.prediction)
             self.arduino.serial_connection.write(b'foto4\n')

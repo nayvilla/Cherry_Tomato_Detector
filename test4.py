@@ -14,7 +14,7 @@ from yolov5.models.common import DetectMultiBackend
 from yolov5.utils.general import non_max_suppression, scale_boxes
 from yolov5.utils.torch_utils import select_device
 
-def detect_tomato(image_path, model_path, img_size=416, conf_threshold=0.1, iou_threshold=0.45, device_type='gpu'):
+def detect_tomato(image_path, model_path, img_size=416, conf_threshold=0.1, iou_threshold=0.45, device_type='cpu'):
     # Configuración del dispositivo y carga del modelo
     device = select_device(device_type)
     model = DetectMultiBackend(model_path, device=device)
@@ -55,3 +55,14 @@ def detect_tomato(image_path, model_path, img_size=416, conf_threshold=0.1, iou_
                 results.append(f"Estado: {class_name} con {confidence}")
 
     return results
+
+
+# Ejemplo de uso de la función
+image_path = r"C:\Users\Naythan\Documents\GitHub\Cherry_Tomato_Detector\src\capture_images\captureImage21.png"
+model_path = r"C:\Users\Naythan\Documents\GitHub\Cherry_Tomato_Detector\src\model_ia\best.pt"
+detections = detect_tomato(image_path, model_path)
+
+# Imprimir los resultados
+print(f'Este es fuea del for: {detections}')
+for detection in detections:
+    print(detection)
