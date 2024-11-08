@@ -35,7 +35,7 @@ class DetectorView:
         self.root_path = os.path.dirname(os.path.dirname(self.current_path))
         self.capture_path = os.path.join(self.root_path, "src", "capture_images")
         self.result_path = os.path.join(self.root_path, "src", "result_images")
-        #self.clear_images()
+        self.clear_images()
         self.image_container = ft.Row(spacing=10, alignment=ft.MainAxisAlignment.CENTER)
     
     def show_loading(self, show):

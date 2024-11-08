@@ -58,8 +58,8 @@ def detect_tomato(image_path, model_path, img_size=416, conf_threshold=0.1, iou_
 
 
 # Ejemplo de uso de la función
-image_path = r"C:\Users\Naythan\Documents\GitHub\Cherry_Tomato_Detector\src\capture_images\captureImage21.png"
-model_path = r"C:\Users\Naythan\Documents\GitHub\Cherry_Tomato_Detector\src\model_ia\best.pt"
+image_path = r"C:\Users\nayth\OneDrive\Documentos\GitHub\Cherry_Tomato_Detector\src\capture_images\captureImage1.png"
+model_path = r"C:\Users\nayth\OneDrive\Documentos\GitHub\Cherry_Tomato_Detector\src\model_ia\best.pt"
 detections = detect_tomato(image_path, model_path)
 
 # Imprimir los resultados

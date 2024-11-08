@@ -28,7 +28,10 @@ class MainController:
         self.update_camera_list()
         self.cap = None  
         self.camera_feed_active = False
-        self.model = project_root / "src/model_ia/best.pt"
+        current_path = os.path.abspath(__file__)
+        root_path = os.path.dirname(os.path.dirname(current_path))
+        self.model = os.path.join(root_path, "src", "model_ia", "best.pt")
+        #self.model = project_root / "src/model_ia/best.pt"
 
     def show_bienvenida(self):
         self.page.window_width = 750
@@ -164,8 +167,8 @@ class MainController:
         # Espera la respuesta "escanear" para tomar la primera foto
         if self.esperar_respuesta("escanear"):
             self.tomar_foto_y_guardar(capture_path, f"captureImage{img_index}.png")
-            self.prediction = detect_tomato(os.path.join(capture_path, f"captureImage{img_index}.png"), self.model)
-            predictions_list.extend(self.prediction)
+            self.prediction = detect_tomato(os.path.join(capture_path, f"captureImage{img_index}.png"), self.model, os.path.join(result_path, f"captureImage{img_index}_detection.png"))
+            predictions_list.append(self.prediction)
             self.detector_view.update_images(os.path.join(result_path, f"captureImage{img_index}_detection.png"), self.prediction)
             self.arduino.serial_connection.write(b'foto1\n')
             self.detector_view.display_console_output("Enviado: foto1")
@@ -174,8 +177,8 @@ class MainController:
         # Espera la respuesta "giro90" para tomar la segunda foto
         if self.esperar_respuesta("giro90"):
             self.tomar_foto_y_guardar(capture_path, f"captureImage{img_index}.png")
-            self.prediction = detect_tomato(os.path.join(capture_path, f"captureImage{img_index}.png"), self.model)
-            predictions_list.extend(self.prediction)
+            self.prediction = detect_tomato(os.path.join(capture_path, f"captureImage{img_index}.png"), self.model, os.path.join(result_path, f"captureImage{img_index}_detection.png"))
+            predictions_list.append(self.prediction)
             self.detector_view.update_images(os.path.join(result_path, f"captureImage{img_index}_detection.png"), self.prediction)
             self.arduino.serial_connection.write(b'foto2\n')
             self.detector_view.display_console_output("Enviado: foto2")
@@ -184,8 +187,8 @@ class MainController:
         # Espera la respuesta "giro180" para tomar la tercera foto
         if self.esperar_respuesta("giro180"):
             self.tomar_foto_y_guardar(capture_path, f"captureImage{img_index}.png")
-            self.prediction = detect_tomato(os.path.join(capture_path, f"captureImage{img_index}.png"), self.model)
-            predictions_list.extend(self.prediction)
+            self.prediction = detect_tomato(os.path.join(capture_path, f"captureImage{img_index}.png"), self.model, os.path.join(result_path, f"captureImage{img_index}_detection.png"))
+            predictions_list.append(self.prediction)
             self.detector_view.update_images(os.path.join(result_path, f"captureImage{img_index}_detection.png"), self.prediction)
             self.arduino.serial_connection.write(b'foto3\n')
             self.detector_view.display_console_output("Enviado: foto3")
@@ -194,36 +197,41 @@ class MainController:
         # Espera la respuesta "giro270" para tomar la cuarta foto
         if self.esperar_respuesta("giro270"):
             self.tomar_foto_y_guardar(capture_path, f"captureImage{img_index}.png")
-            self.prediction = detect_tomato(os.path.join(capture_path, f"captureImage{img_index}.png"), self.model)
-            predictions_list.extend(self.prediction)
+            self.prediction = detect_tomato(os.path.join(capture_path, f"captureImage{img_index}.png"), self.model, os.path.join(result_path, f"captureImage{img_index}_detection.png"))
+            predictions_list.append(self.prediction)
             self.detector_view.update_images(os.path.join(result_path, f"captureImage{img_index}_detection.png"), self.prediction)
             self.arduino.serial_connection.write(b'foto4\n')
             self.detector_view.display_console_output("Enviado: foto4")
-
+        print(f"este es mi predictionlist: {predictions_list}")
         # Espera la respuesta "resultado" para enviar el mensaje final
         if self.esperar_respuesta("resultado"):
-            # Verificar que predictions_list no esté vacía
+        # Verificar que predictions_list no esté vacía
             if predictions_list:
                 # Contar ocurrencias de cada predicción en la lista
                 count = Counter(predictions_list)
 
                 # Asegurarse de que hay al menos un elemento en el contador
                 if count:
-                    # Obtener la predicción más frecuente
+                    # Obtener la predicción más frecuente y su número de ocurrencias
                     most_common_prediction, common_count = count.most_common(1)[0]
 
-                    # Si hay un empate o pocos resultados, selecciona el de mayor confianza
+                    # Si hay un empate o la predicción más común no es suficiente, selecciona la de mayor confianza
                     if common_count == 1 or common_count < len(predictions_list) / 2:
-                        # Ordenar por porcentaje de confianza y seleccionar el mayor
-                        most_common_prediction = max(predictions_list, key=lambda x: float(x.split("con")[1].strip('%')))
+                        # Ordenar por porcentaje de confianza y seleccionar el valor con mayor confianza
+                        most_common_prediction = max(
+                            predictions_list,
+                            key=lambda x: float(x.split("con")[1].strip('%'))
+                        )
                 else:
-                    most_common_prediction = "Sin resultados"  # O algún valor por defecto
+                    most_common_prediction = "Sin resultados"  # Valor por defecto si no hay predicciones válidas
             else:
-                most_common_prediction = "Sin resultados"  # O algún valor por defecto
+                most_common_prediction = "Sin resultados"  # Valor por defecto si predictions_list está vacía
 
+            # Generar el mensaje de resultado y actualizar la vista
             resultado_msg = f"resultado: {most_common_prediction}"
             self.detector_view.update_result(most_common_prediction)
 
+            # Enviar el resultado al Arduino
             self.arduino.serial_connection.write(resultado_msg.encode())
             self.detector_view.display_console_output(f"Enviado: {resultado_msg}")
 
