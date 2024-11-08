@@ -218,7 +218,7 @@ class MainController:
                     # Si hay un empate o pocos resultados, selecciona el de mayor confianza
                     if common_count == 1 or common_count < len(predictions_list) / 2:
                         # Ordenar por porcentaje de confianza y seleccionar el mayor
-                        most_common_prediction = max(predictions_list, key=lambda x: float(x.split("Confianza: ")[1].strip('%')))
+                        most_common_prediction = max(predictions_list, key=lambda x: float(x.split("con")[1].strip('%')))
                 else:
                     most_common_prediction = "Sin resultados"  # O algún valor por defecto
             else:
@@ -230,7 +230,7 @@ class MainController:
             self.arduino.serial_connection.write(resultado_msg.encode())
             self.detector_view.display_console_output(f"Enviado: {resultado_msg}")
 
-    def esperar_respuesta(self, respuesta_esperada, timeout=5):
+    def esperar_respuesta(self, respuesta_esperada, timeout=10):
         """Espera una respuesta específica del Arduino con un timeout."""
         start_time = time.time()
         while time.time() - start_time < timeout:
