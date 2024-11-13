@@ -41,7 +41,7 @@ def detect_tomato(image_path, model_path, output_path, img_size=416, conf_thresh
     pred = non_max_suppression(pred, conf_threshold, iou_threshold, classes=None, agnostic=False)
 
     # Mapeo de clases (modifica según las clases de tu modelo)
-    class_names = {0: "Maduro", 1: "Premaduro", 2: "Inmaduro", 3: "Dañado"}
+    class_names = {0: "Maduro", 1: "Premaduro", 2: "Inmaduro", 3: "Malo"}
 
     # Variables para almacenar el mejor resultado
     best_result = None
